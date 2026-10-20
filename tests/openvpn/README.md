@@ -6,7 +6,7 @@ adapters or copied parser implementations are used.
 The same CMake build compiles the OpenVPN profile model, Qt editor and profile
 factory against the application's real headers as an object library. It does
 not link or launch the full GUI. Qt6 Widgets/Network/Concurrent and Boost
-headers are required for this check.
+and yaml-cpp headers are required for this check.
 
 ```sh
 cmake -S tests/openvpn -B build-openvpn

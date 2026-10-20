@@ -15,7 +15,7 @@ jobs:
           go-version-file: core/server/go.mod
           cache-dependency-path: core/server/go.sum
       - name: Install native test dependencies
-        run: sudo apt-get update && sudo apt-get install -y qt6-base-dev libboost-dev cmake ninja-build g++ openssl
+        run: sudo apt-get update && sudo apt-get install -y qt6-base-dev libboost-dev libyaml-cpp-dev cmake ninja-build g++ openssl
       - name: Compile and run real Qt parser tests
         run: |
           cmake -S tests/openvpn -B build-openvpn -G Ninja
