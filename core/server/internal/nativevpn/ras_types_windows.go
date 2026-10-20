@@ -41,3 +41,4 @@ type rasConnectStatus struct {
 }
 
 const rasConnected = 0x2000
+const rasHangUpName = "RasHangUpW"

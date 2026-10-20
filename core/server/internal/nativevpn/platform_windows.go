@@ -39,7 +39,7 @@ const ipUnicastIF = 31
 var (
 	rasDLL       = windows.NewLazySystemDLL("rasapi32.dll")
 	rasDial      = rasDLL.NewProc("RasDialW")
-	rasHangUp    = rasDLL.NewProc("RasHangUp")
+	rasHangUp    = rasDLL.NewProc(rasHangUpName)
 	rasStatus    = rasDLL.NewProc("RasGetConnectStatusW")
 	rasErrorText = rasDLL.NewProc("RasGetErrorStringW")
 	pendingDials sync.Map
