@@ -156,21 +156,16 @@ func dialWindows(ctx context.Context, name string, options Options, physical int
 	var handle windows.Handle
 	code, _, _ := rasDial.Call(0, 0, uintptr(unsafe.Pointer(&params)), 2, rasNotify, uintptr(unsafe.Pointer(&handle)))
 	if code != 0 {
-		if handle != 0 {
-			rasHangUp.Call(uintptr(handle))
-		}
-		return 0, rasError(code)
+		return handle, rasError(code)
 	}
 	select {
 	case code := <-result:
 		if code != 0 {
-			rasHangUp.Call(uintptr(handle))
-			return 0, rasError(uintptr(code))
+			return handle, rasError(uintptr(code))
 		}
 		return handle, nil
 	case <-ctx.Done():
-		rasHangUp.Call(uintptr(handle))
-		return 0, ctx.Err()
+		return handle, ctx.Err()
 	}
 }
 
