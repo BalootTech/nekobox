@@ -928,6 +928,11 @@ parse_json:
       updateSingBox(QJsonObject{{"endpoints", QJsonArray{json}}});
       goto ret_loop;
     }
+    if (json["type"] == "windows-vpn" || json["type"] == "pptp" ||
+        json["type"] == "l2tp") {
+      updateSingBox(QJsonObject{{"outbounds", QJsonArray{json}}});
+      goto ret_loop;
+    }
     ent = Configs::ProfileManager::NewProxyEntity("custom");
     auto bean = ent->unlock(ent->CustomBean());
     if ((json_contains_outbounds || json_contains_endpoints) &&

@@ -30,6 +30,9 @@ jobs:
       - name: Test bounded URL-test tunnel startup
         working-directory: core/server
         run: go test -v urltest_ready.go urltest_ready_test.go
+      - name: Test native Windows VPN options and shared lifecycle
+        working-directory: core/server
+        run: go test -tags with_openvpn,with_gvisor ./internal/nativevpn
       - name: Validate generated endpoints against the pinned core
         run: |
           openssl req -x509 -newkey rsa:2048 -nodes -keyout build-openvpn/key.pem -out build-openvpn/ca.pem -days 1 -subj /CN=OpenVPN-test

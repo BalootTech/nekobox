@@ -37,7 +37,7 @@ def main():
  code+='\n#define FIRST_OR_SECOND(a, b) a.isEmpty() ? b : a\nnamespace Configs {\n'
  qh=read(HEADER+'QUICBean.hpp');code+=qh[qh.index('class QUICBean : public AbstractBean {'):qh.index('#undef _add')];code+='QUICBean(ProxyEntity *, int); bool TryParseLink(const QString &) override; };\n'
  th=read(HEADER+'TrojanVLESSBean.hpp');ctor='TrojanVLESSBean(Configs::ProxyEntity * entity';start=th.index('class TrojanVLESSBean : public AbstractBean {');prefix=th[start:th.index(ctor,start)];code+=re.sub(r'\bexplicit\s*$','',prefix)+function(th,ctor)+'\nbool TryParseLink(const QString &) override; };\n'
- names='Mieru Http ShadowSocks Chain VMess AnyTLS ShadowTLS Wireguard OpenVPN Tailscale SSH ExtraCore Tor Naive TrustTunnel Juicity Snell'.split()
+ names='Mieru Http ShadowSocks Chain VMess AnyTLS ShadowTLS Wireguard OpenVPN NativeVPN Tailscale SSH ExtraCore Tor Naive TrustTunnel Juicity Snell'.split()
  for n in names:code+='struct '+n+'Bean : AbstractBean { '+n+'Bean(ProxyEntity *e, int=0) : AbstractBean(e) { throw std::runtime_error("unexpected '+n+' allocation"); } };\n'
  code+='struct SocksBean : AbstractBean { static constexpr int type_Socks5=0; SocksBean(ProxyEntity *e,int) : AbstractBean(e) { throw std::runtime_error("unexpected Socks allocation"); } };\n'
  code+='namespace From_Link {\n'

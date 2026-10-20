@@ -222,6 +222,8 @@ static void loadTranslate(QString locale) {
       {"shadowtls", "ShadowTLS"},
       {"wireguard", "Wireguard"},
       {"openvpn", "OpenVPN"},
+      {"pptp", "PPTP (Windows)"},
+      {"l2tp", "L2TP/IPsec (Windows)"},
       {"awg", "AmneziaWG"},
       {"tailscale", "Tailscale"},
       {"ssh", "SSH"},

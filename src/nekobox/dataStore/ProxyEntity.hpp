@@ -38,6 +38,7 @@ class ShadowTLSBean;
 
 class WireguardBean;
 class OpenVPNBean;
+class NativeVPNBean;
 
 class TailscaleBean;
 
@@ -139,7 +140,7 @@ public:
   cast_func(Chain) cast_func(Socks) cast_func(Http) cast_func(ShadowSocks)
       cast_func(VMess) cast_func(TrojanVLESS)
       cast_func(Mieru) cast_func(QUIC) cast_func(AnyTLS) cast_func(ShadowTLS)
-          cast_func(Wireguard) cast_func(OpenVPN) cast_func(Tailscale) cast_func(SSH)
+          cast_func(Wireguard) cast_func(OpenVPN) cast_func(NativeVPN) cast_func(Tailscale) cast_func(SSH)
               cast_func(Tor) cast_func(Custom) cast_func(ExtraCore)
                   cast_func(Naive) cast_func(TrustTunnel) cast_func(Juicity)
                     cast_func(Snell)

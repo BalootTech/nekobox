@@ -17,6 +17,7 @@ namespace Configs
 
 
 [[nodiscard]]  QString ProxyEntity::DisplayAddress(){
+    if (type == "pptp" || type == "l2tp") return serverAddress;
     return (type != "chain" && type != "custom" && type != "extracore" &&
             type != "tailscale" && type != "tor") ? serverAddress + ":" + QString::number(serverPort) : "";
 }
@@ -131,6 +132,10 @@ namespace Configs
             bean = new Configs::WireguardBean(ent);
         cast(openvpn)
             bean = new Configs::OpenVPNBean(ent);
+        cast(pptp)
+            bean = new Configs::NativeVPNBean(ent, false);
+        cast(l2tp)
+            bean = new Configs::NativeVPNBean(ent, true);
         cast(tailscale)
             bean = new Configs::TailscaleBean(ent);
         cast(ssh) 
@@ -263,6 +268,7 @@ qDebug() << "Type Unknown" << make_strong_bean;
         cast_func(ShadowTLS)
         cast_func(Wireguard)
         cast_func(OpenVPN)
+        cast_func(NativeVPN)
         cast_func(Tailscale)
         cast_func(SSH)
         cast_func(Tor)

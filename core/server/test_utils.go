@@ -160,6 +160,11 @@ func BatchURLTest(ctx context.Context, i *boxbox.Box, outboundTags []string, url
 				}
 				var duration time.Duration
 				var err error
+				if ready, ok := outbound.(interface{ WaitReady(context.Context) error }); ok {
+					readyCtx, cancel := context.WithTimeout(ctx, timeout)
+					err = ready.WaitReady(readyCtx)
+					cancel()
+				}
 				if endpoint, ok := outbound.(adapter.OpenVPNEndpoint); ok {
 					// Each profile test creates its own asynchronously connecting
 					// tunnel, even when the main profile is already connected.

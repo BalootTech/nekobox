@@ -35,6 +35,17 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
+      - name: Verify Windows RAS structure layout against the SDK
+        shell: pwsh
+        run: |
+          cl /nologo /EHsc tests/windows-vpn/ras_abi.cpp /Feras_abi.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Native RAS SDK probe failed' }
+          ./ras_abi.exe | Set-Content -Encoding utf8 ras_abi.json
+          $env:NEKOBOX_RAS_SDK_ABI = "$PWD/ras_abi.json"
+          $env:GO111MODULE = 'off'
+          $env:GOTOOLCHAIN = 'local'
+          go test -v core/server/internal/nativevpn/ras_types_windows.go core/server/internal/nativevpn/ras_types_windows_test.go
+          if ($LASTEXITCODE -ne 0) { throw 'RAS ABI mismatch' }
       - uses: jurplel/install-qt-action@v4
         with:
           version: '6.10.0'
@@ -45,6 +56,7 @@ jobs:
         with:
           path: C:/vcpkg/installed
           key: openvpn-win64-vcpkg-${{ hashFiles('.github/workflows/openvpn-win64.yml') }}
+          restore-keys: openvpn-win64-vcpkg-
       - name: Install C++ libraries
         shell: pwsh
         run: |

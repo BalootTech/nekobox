@@ -14,6 +14,8 @@ target_link_libraries(openvpn_config_tests PRIVATE Qt6::Core)
 add_library(openvpn_profile_compile OBJECT
     ../../src/gharqad/configs/proxy/OpenVPNBean.cpp
     ../../src/gharqad/ui/profile/edit_openvpn.cpp
+    ../../src/gharqad/configs/proxy/NativeVPNBean.cpp
+    ../../src/gharqad/ui/profile/edit_native_vpn.cpp
     ../../src/gharqad/dataStore/ProxyEntity.cpp)
 target_include_directories(openvpn_profile_compile PRIVATE ../../src ${Boost_INCLUDE_DIRS})
 target_link_libraries(openvpn_profile_compile PRIVATE Qt6::Widgets Qt6::Network Qt6::Concurrent)

@@ -1067,6 +1067,8 @@ ProfileManager::NewProxyEntity(QString scheme, bool additional) {
       scheme = "wireguard";
     } else if (scheme == "openvpnclient" || scheme == "ovpn") {
       scheme = "openvpn";
+    } else if (scheme == "windowsvpn" || scheme == "l2tpipsec") {
+      scheme = "l2tp";
     } else if (scheme == "amneziawg"
         || scheme == "amnezia"
         || scheme == "vpn"){

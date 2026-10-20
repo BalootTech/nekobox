@@ -23,6 +23,9 @@ do
 sed -i 's/package main/package main_sing/g;' main_sing/$i
 done
 
+# Keep the application-owned Windows VPN registry when refreshing CLI sources.
+sed -i 's@"github.com/sagernet/sing-box/include"@"nekobox_core/internal/nativevpn"@; s/include.Context(/nativevpn.Context(/g' main_sing/cmd.go
+
 cat << 'EOF' > main_sing/main_sing.go
 package main_sing
 

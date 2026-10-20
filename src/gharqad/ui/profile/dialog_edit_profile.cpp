@@ -24,6 +24,7 @@
 #include <nekobox/ui/profile/edit_vmess.h>
 #include <nekobox/ui/profile/edit_wireguard.h>
 #include <nekobox/ui/profile/edit_openvpn.h>
+#include <nekobox/ui/profile/edit_native_vpn.h>
 #include <nekobox/ui/profile/edit_snell.h>
 
 #include <QApplication>
@@ -270,6 +271,8 @@ DialogEditProfile::DialogEditProfile(const QString &_type, int profileOrGroupId,
     LOAD_TYPE("naive")
     LOAD_TYPE("wireguard")
     LOAD_TYPE("openvpn")
+    LOAD_TYPE("pptp")
+    LOAD_TYPE("l2tp")
     LOAD_TYPE("awg")
     LOAD_TYPE("tailscale")
     LOAD_TYPE("ssh")
@@ -372,6 +375,10 @@ void DialogEditProfile::typeSelected(const QString &newType) {
     auto _innerWidget = new EditOpenVPN(this);
     innerWidget = _innerWidget;
     innerEditor = _innerWidget;
+  } else if (type == "pptp" || type == "l2tp") {
+    auto _innerWidget = new EditNativeVPN(type == "l2tp", this);
+    innerWidget = _innerWidget;
+    innerEditor = _innerWidget;
   } else if (type == "tailscale") {
     auto _innerWidget = new EditTailScale(this);
     innerWidget = _innerWidget;
@@ -442,6 +449,10 @@ void DialogEditProfile::typeSelected(const QString &newType) {
   ui->address_l->setVisible(showAddressPort);
   ui->port->setVisible(showAddressPort);
   ui->port_l->setVisible(showAddressPort);
+  if (type == "pptp" || type == "l2tp") {
+    ui->port->hide();
+    ui->port_l->hide();
+  }
 
   auto bean = ent->bean();
 #ifdef DEBUG_MODE
@@ -621,6 +632,7 @@ bool DialogEditProfile::onEnd() {
   if (type != "openvpn") {
     ent->serverAddress = ui->address->text().remove(' ');
     ent->serverPort = ui->port->text().toInt();
+    if (type == "pptp" || type == "l2tp") ent->serverPort = type == "pptp" ? 1723 : 1701;
   }
   auto bean = ent->unlock(ent->bean());
 

@@ -2,13 +2,13 @@ package boxmain
 
 import (
 	"context"
+	"nekobox_core/internal/nativevpn"
 	"os"
 	"os/user"
 	"strconv"
 	"time"
 
 	"github.com/sagernet/sing-box/experimental/deprecated"
-	"github.com/sagernet/sing-box/include"
 	"github.com/sagernet/sing-box/log"
 	"github.com/sagernet/sing/service"
 	"github.com/sagernet/sing/service/filemanager"
@@ -68,5 +68,5 @@ func preRun(cmd *cobra.Command, args []string) {
 	if len(configPaths) == 0 && len(configDirectories) == 0 {
 		configPaths = append(configPaths, "config.json")
 	}
-	globalCtx = include.Context(service.ContextWith(globalCtx, deprecated.NewStderrManager(log.StdLogger())))
+	globalCtx = nativevpn.Context(service.ContextWith(globalCtx, deprecated.NewStderrManager(log.StdLogger())))
 }
