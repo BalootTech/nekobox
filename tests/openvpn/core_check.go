@@ -36,8 +36,8 @@ func main() {
 	if err := input.Err(); err != nil {
 		panic(err)
 	}
-	if count != 2 {
-		panic(fmt.Sprintf("expected 2 parser-generated configurations, got %d", count))
+	if count != 3 {
+		panic(fmt.Sprintf("expected 3 parser-generated configurations, got %d", count))
 	}
-	fmt.Println("Core accepted parser-generated OpenVPN UDP and TCP endpoints")
+	fmt.Println("Core accepted parser-generated OpenVPN UDP, udp-client and TCP endpoints")
 }
