@@ -72,14 +72,31 @@ func run() error {
 	proxy, _ := url.Parse(fmt.Sprintf("http://127.0.0.1:%d", port))
 	transport := &http.Transport{Proxy: http.ProxyURL(proxy), TLSHandshakeTimeout: 15 * time.Second, DisableKeepAlives: true}
 	defer transport.CloseIdleConnections()
-	client := &http.Client{Transport: transport, Timeout: 65 * time.Second}
+	client := &http.Client{Transport: transport, Timeout: 20 * time.Second}
 	for _, item := range []struct{ name, url string }{
 		{"vpn_request", "https://api.ipify.org?format=json"},
 		{"direct_rule_request", "https://api64.ipify.org?format=json"},
 	} {
-		request, _ := http.NewRequestWithContext(ctx, http.MethodGet, item.url, nil)
 		start := time.Now()
-		response, err := client.Do(request)
+		var response *http.Response
+		deadline := start.Add(75 * time.Second)
+		waitingReported := false
+		for {
+			request, _ := http.NewRequestWithContext(ctx, http.MethodGet, item.url, nil)
+			response, err = client.Do(request)
+			if err == nil || item.name != "vpn_request" || time.Now().After(deadline) || ctx.Err() != nil {
+				break
+			}
+			if !waitingReported {
+				report("waiting_for_vpn", true)
+				waitingReported = true
+			}
+			select {
+			case <-time.After(2 * time.Second):
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+		}
 		if err != nil {
 			return fmt.Errorf("%s: %w", item.name, err)
 		}
