@@ -1,0 +1,120 @@
+name: OpenVPN Win64 portable
+on:
+  push:
+    branches: [codex/openvpn]
+    paths: [.github/workflows/openvpn-win64.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: core/server/go.mod
+          cache-dependency-path: core/server/go.sum
+      - name: Build Windows core with OpenVPN
+        working-directory: core/server
+        env:
+          GOOS: windows
+          GOARCH: amd64
+          CGO_ENABLED: '0'
+        run: |
+          mkdir -p ../../portable-core
+          go build -buildvcs=false -trimpath -ldflags '-w -s -checklinkname=0 -X github.com/sagernet/sing-box/constant.Version=1.14.1-extended-2.7.2' -tags with_clash_api,with_gvisor,with_quic,with_wireguard,with_utls,with_dhcp,with_shadowtls,with_grpc,with_acme,with_awg,with_openvpn,with_tailscale,with_naive,with_naive_outbound,with_purego -o ../../portable-core/nekobox_core.exe .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openvpn-win64-core
+          path: portable-core/nekobox_core.exe
+  gui:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.10.0'
+          arch: win64_msvc2022_64
+          cache: true
+      - name: Cache C++ libraries
+        uses: actions/cache@v4
+        with:
+          path: C:/vcpkg/installed
+          key: openvpn-win64-vcpkg-${{ hashFiles('.github/workflows/openvpn-win64.yml') }}
+      - name: Install C++ libraries
+        shell: pwsh
+        run: |
+          & "$env:VCPKG_INSTALLATION_ROOT/vcpkg.exe" install thrift boost-filesystem boost-dll boost-bimap cpr yaml-cpp leveldb --triplet x64-windows
+          if ($LASTEXITCODE -ne 0) { throw 'vcpkg failed' }
+      - name: Build GUI
+        shell: pwsh
+        run: |
+          $thrift = "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/tools/thrift/thrift.exe"
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows -DVCPKG_MANIFEST_MODE=OFF "-DTHRIFT_COMPILER=$thrift" -DBUILD_GO_PARTS=OFF -DSKIP_UPDATER=ON -DSKIP_JS_UPDATER=ON -DNKR_SOFTWARE_KEYS=cm -DNKR_DEFAULT_VERSION=5.11.28.3-openvpn
+          if ($LASTEXITCODE -ne 0) { throw 'CMake configure failed' }
+          cmake --build build --parallel 4
+          if ($LASTEXITCODE -ne 0) { throw 'GUI build failed' }
+      - name: Collect GUI and libraries
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path portable/public -Force | Out-Null
+          Copy-Item build/nekobox.exe portable/
+          Copy-Item build/*.dll portable/ -ErrorAction SilentlyContinue
+          Copy-Item "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin/*.dll" portable/
+          Copy-Item res/public/* portable/public/ -Recurse
+          Copy-Item build/*.qm portable/public/
+          Copy-Item res/languages.txt portable/public/
+          Copy-Item LICENSE portable/LICENSE.txt
+          windeployqt portable/nekobox.exe --release --no-translations --no-system-d3d-compiler --no-opengl-sw
+          if ($LASTEXITCODE -ne 0) { throw 'Qt deployment failed' }
+          Invoke-WebRequest https://github.com/qr243vbi/ruleset/raw/refs/heads/rule-set/srslist.json -OutFile portable/srslist.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openvpn-win64-gui
+          path: portable/
+  package:
+    needs: [core, gui]
+    runs-on: windows-2022
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: openvpn-win64-gui
+          path: nekobox
+      - uses: actions/download-artifact@v4
+        with:
+          name: openvpn-win64-core
+          path: nekobox
+      - name: Add upstream runtime companions
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download --repo SagerNet/cronet-go --pattern libcronet-windows-amd64.dll --dir companions
+          if ($LASTEXITCODE -ne 0) { throw 'Cronet download failed' }
+          Copy-Item companions/libcronet-windows-amd64.dll nekobox/libcronet.dll
+          gh release download v26.9.9 --repo XTLS/Xray-core --pattern Xray-windows-64.zip --dir companions
+          if ($LASTEXITCODE -ne 0) { throw 'Xray download failed' }
+          Expand-Archive companions/Xray-windows-64.zip companions/xray
+          Copy-Item companions/xray/xray.exe nekobox/
+      - name: Smoke test and package
+        shell: pwsh
+        run: |
+          & ./nekobox/nekobox_core.exe sing-box version
+          if ($LASTEXITCODE -ne 0) { throw 'Core version check failed' }
+          $env:QT_QPA_PLATFORM = 'offscreen'
+          Copy-Item nekobox "$env:RUNNER_TEMP/openvpn-smoke" -Recurse
+          $process = Start-Process -FilePath "$env:RUNNER_TEMP/openvpn-smoke/nekobox.exe" -ArgumentList @('-appdata', "$env:RUNNER_TEMP/openvpn-smoke-data") -WorkingDirectory "$env:RUNNER_TEMP/openvpn-smoke" -WindowStyle Hidden -PassThru
+          Start-Sleep -Seconds 8
+          if ($process.HasExited) { throw "GUI exited early: $($process.ExitCode)" }
+          Stop-Process -Id $process.Id
+          Compress-Archive -Path nekobox -DestinationPath NekoBox-OpenVPN-Win64.zip
+          Get-FileHash NekoBox-OpenVPN-Win64.zip -Algorithm SHA256 | Format-List
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NekoBox-OpenVPN-Win64
+          path: NekoBox-OpenVPN-Win64.zip
+          retention-days: 30
