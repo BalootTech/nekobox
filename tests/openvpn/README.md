@@ -33,3 +33,13 @@ route and `api64.ipify.org` through the configured rules. Supply a direct rule
 for the second domain to check split routing. It does not modify system proxy
 settings or routes. Provider configuration, keys and credentials must remain
 local and must never be committed or supplied to the workflow.
+
+URL tests wait for the native OpenVPN endpoint's connected state before HTTP
+warm-up and latency measurement. Startup uses the configured URL-test timeout;
+cancellation and terminal authentication errors stop the wait. Regression
+tests also cover readiness becoming visible after a state notification:
+
+```sh
+cd core/server
+go test -v urltest_ready.go urltest_ready_test.go
+```

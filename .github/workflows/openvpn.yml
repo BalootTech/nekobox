@@ -27,6 +27,9 @@ jobs:
           python3 tests/json-splitter/test_json_splitter.py
           python3 tests/import-dispatch/test_import_dispatch.py
           python3 tests/detour-chain/test_import_compat.py
+      - name: Test bounded URL-test tunnel startup
+        working-directory: core/server
+        run: go test -v urltest_ready.go urltest_ready_test.go
       - name: Validate generated endpoints against the pinned core
         run: |
           openssl req -x509 -newkey rsa:2048 -nodes -keyout build-openvpn/key.pem -out build-openvpn/ca.pem -days 1 -subj /CN=OpenVPN-test
@@ -36,6 +39,18 @@ jobs:
       - name: Build isolated Windows connection probe
         working-directory: core/server
         run: GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags with_openvpn,with_gvisor -o ../../build-openvpn/openvpn-connection-probe-windows-amd64.exe ../../tests/openvpn/connection_probe.go
+      - name: Build Windows application core with URL-test fix
+        working-directory: core/server
+        env:
+          GOOS: windows
+          GOARCH: amd64
+          CGO_ENABLED: '0'
+        run: go build -buildvcs=false -trimpath -ldflags '-w -s -checklinkname=0 -X github.com/sagernet/sing-box/constant.Version=1.14.1-extended-2.7.2' -tags with_clash_api,with_gvisor,with_quic,with_wireguard,with_utls,with_dhcp,with_shadowtls,with_grpc,with_acme,with_awg,with_openvpn,with_tailscale,with_naive,with_naive_outbound,with_purego -o ../../build-openvpn/nekobox_core.exe .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openvpn-win64-core
+          path: build-openvpn/nekobox_core.exe
+          retention-days: 30
       - uses: actions/upload-artifact@v4
         with:
           name: openvpn-connection-probe-windows-amd64

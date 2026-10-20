@@ -1,4 +1,5 @@
 //go:build !darwin
+
 package main
 
 import (
@@ -157,8 +158,32 @@ func BatchURLTest(ctx context.Context, i *boxbox.Box, outboundTags []string, url
 					},
 					Timeout: timeout,
 				}
+				var duration time.Duration
+				var err error
+				if endpoint, ok := outbound.(adapter.OpenVPNEndpoint); ok {
+					// Each profile test creates its own asynchronously connecting
+					// tunnel, even when the main profile is already connected.
+					readyCtx, cancel := context.WithTimeout(ctx, timeout)
+					err = waitURLTestReady(readyCtx, func() (bool, error) {
+						status := endpoint.OpenVPNStatus()
+						switch status.State {
+						case adapter.OpenVPNStateConnected:
+							return true, nil
+						case adapter.OpenVPNStateError:
+							return false, fmt.Errorf("OpenVPN: %s", status.Error)
+						case adapter.OpenVPNStateAuthPending:
+							return false, errors.New("OpenVPN authentication is pending")
+						default:
+							return false, nil
+						}
+					}, endpoint.StatusUpdated)
+					cancel()
+					if err != nil {
+						err = fmt.Errorf("wait for OpenVPN tunnel before URL test: %w", err)
+					}
+				}
 				// to properly measure muxed configs, let's do the test twice
-				if twice {
+				if err == nil && twice {
 					req, err := http.NewRequestWithContext(ctx, "HEAD", url, nil)
 					if err == nil {
 						resp, err := client.Do(req)
@@ -167,7 +192,9 @@ func BatchURLTest(ctx context.Context, i *boxbox.Box, outboundTags []string, url
 						}
 					}
 				}
-				duration, err := urlTest(ctx, client, url)
+				if err == nil {
+					duration, err = urlTest(ctx, client, url)
+				}
 				resAccess.Lock()
 				u := &URLTestResult{
 					Duration: duration,
