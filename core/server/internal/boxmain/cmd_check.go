@@ -2,7 +2,7 @@ package boxmain
 
 import (
 	"context"
-	"github.com/sagernet/sing-box/include"
+	"nekobox_core/internal/nativevpn"
 
 	"nekobox_core/internal/boxbox"
 )
@@ -10,7 +10,7 @@ import (
 var ruleset_cachedir string
 
 func Check(content []byte) error {
-	ctx := include.Context(context.Background())
+	ctx := nativevpn.Context(context.Background())
 	options, err := parseConfig(ctx, content)
 	if err != nil {
 		return err
