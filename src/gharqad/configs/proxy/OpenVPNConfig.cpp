@@ -47,7 +47,10 @@ bool tokenize(const QString &line, QStringList &tokens) {
 }
 
 bool transport(QString input, QString &output) {
-    if (input == "udp" || input == "udp4" || input == "udp6") output = input;
+    // Some providers export udp-client, analogous to tcp-client. The native
+    // endpoint uses udp for this client transport.
+    if (input == "udp-client") output = "udp";
+    else if (input == "udp" || input == "udp4" || input == "udp6") output = input;
     else if (input == "tcp" || input == "tcp-client") output = "tcp";
     else if (input == "tcp4" || input == "tcp4-client") output = "tcp4";
     else if (input == "tcp6" || input == "tcp6-client") output = "tcp6";

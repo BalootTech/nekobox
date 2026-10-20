@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
         QFile cert(app.arguments()[2]);
         require(cert.open(QIODevice::ReadOnly), "read core fixture material");
         const QString material = "<ca>\n" + QString::fromUtf8(cert.readAll()) + "</ca>\n";
-        for (const QString proto : {QString("udp"), QString("tcp-client")}) {
+        for (const QString proto : {QString("udp"), QString("udp-client"), QString("tcp-client")}) {
             auto parsed = Parse("client\ndev tun\nremote 127.0.0.1 1194\nproto " + proto + "\n" + material);
             require(parsed.error.isEmpty(), "core fixture parses");
             auto endpoint = parsed.endpoint;
@@ -53,6 +53,17 @@ int main(int argc, char **argv) {
     require(parsed.endpoint["servers"].toArray()[0].toObject()["server_port"] == 443, "global port applies after remote");
     require(parsed.endpoint["network"] == "tcp4", "IPv4 transport preserved");
 
+    parsed = Parse("client\ndev tun\nproto udp-client\nremote vpn.example.com\nport 80\n"
+        "auth SHA1\ncipher AES-128-CBC\nauth-user-pass\n<ca>\nCA DATA\n</ca>\n");
+    require(parsed.error.isEmpty() && parsed.needsCredentials, "provider udp-client configuration imports");
+    require(parsed.endpoint["network"] == "udp", "udp-client normalizes to native UDP");
+    servers = parsed.endpoint["servers"].toArray();
+    require(servers[0].toObject()["network"] == "udp" && servers[0].toObject()["server_port"] == 80,
+        "udp-client remote retains UDP and global port");
+    parsed = Parse(base + "remote backup.example.com 80 udp-client\n");
+    require(parsed.error.isEmpty() && parsed.endpoint["servers"].toArray()[1].toObject()["network"] == "udp",
+        "per-remote udp-client normalizes to UDP");
+
     parsed = Parse(base + "<cert>\nCLIENT CERT\n</cert>\n<key>\nCLIENT KEY\n</key>\n"
         "tls-auth [inline] 1\n<tls-auth>\nCONTROL KEY\n</tls-auth>\n"
         "verify-x509-name \"VPN Server\" name\n");
@@ -81,7 +92,7 @@ int main(int argc, char **argv) {
     require(!LooksLikeConfig("vless://example\nss://example"), "share links are not OpenVPN");
 
     for (const QString invalid : {
-        base + "dev tap\n", base + "proto tcp-server\n", base + "remote bad 70000\n",
+        base + "dev tap\n", base + "proto tcp-server\n", base + "proto udp-server\n", base + "remote bad 70000\n",
         base + "up /tmp/script\n", base + "plugin unsafe.so\n", base + "config another.ovpn\n",
         base + "ca relative.crt\n", base + "key-direction 2\n", base + "auth-retry interact\n",
         base + "remote \"unclosed\n", base + "<key>\nx\n", base + "<key>\nx\n</key>\n",
@@ -110,6 +121,10 @@ int main(int argc, char **argv) {
     require(parsed.error.isEmpty() && parsed.endpoint["username"] == "alice", "bundled credentials work");
     require(parsed.endpoint["tls"].toObject()["certificate"] == "CA FILE", "quoted relative CA path resolves");
     require(!bundled.contains("ca cert.pem") && !bundled.contains("client.key"), "saved profile has no original file dependencies");
+    write("udp-client.ovpn", "client\nproto udp-client\nremote vpn.example.com\nport 80\nca \"ca cert.pem\"\nauth-user-pass\n");
+    require(LoadFile(dir.filePath("udp-client.ovpn"), bundled, error), "udp-client file import succeeds");
+    parsed = Parse(bundled);
+    require(parsed.endpoint["servers"].toArray()[0].toObject()["network"] == "udp", "udp-client file builds UDP endpoint");
     write("missing.ovpn", "client\nremote example.com\nca missing.pem\n");
     require(!LoadFile(dir.filePath("missing.ovpn"), bundled, error), "missing external material rejected");
     write("injection.pem", "CERT\n</ca>\nup evil");
