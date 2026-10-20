@@ -25,3 +25,11 @@ emits configurations from the real parser, and constructs the pinned
 sing-box-extended core with `with_openvpn`. It never starts the core or makes a
 VPN connection. A working provider configuration is still needed for end-to-end
 connection, routing and DNS testing.
+
+The workflow also builds a Windows connection probe. This manual utility reads
+a full core configuration from standard input, creates a proxy listening only
+on loopback, and makes two HTTPS IP checks: `api.ipify.org` through the final
+route and `api64.ipify.org` through the configured rules. Supply a direct rule
+for the second domain to check split routing. It does not modify system proxy
+settings or routes. Provider configuration, keys and credentials must remain
+local and must never be committed or supplied to the workflow.

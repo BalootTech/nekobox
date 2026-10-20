@@ -33,3 +33,11 @@ jobs:
           build-openvpn/openvpn_config_tests --emit-core build-openvpn/ca.pem > build-openvpn/core-configs.jsonl
           cd core/server
           go run -tags with_openvpn,with_gvisor ../../tests/openvpn/core_check.go < ../../build-openvpn/core-configs.jsonl
+      - name: Build isolated Windows connection probe
+        working-directory: core/server
+        run: GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags with_openvpn,with_gvisor -o ../../build-openvpn/openvpn-connection-probe-windows-amd64.exe ../../tests/openvpn/connection_probe.go
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openvpn-connection-probe-windows-amd64
+          path: build-openvpn/openvpn-connection-probe-windows-amd64.exe
+          retention-days: 7
