@@ -14,6 +14,7 @@
 #include "AnyTLSBean.hpp"
 #include "ShadowTLSBean.hpp"
 #include "WireguardBean.h"
+#include "OpenVPNBean.hpp"
 #include "Tailscale.hpp"
 #include "SSHBean.h"
 #include "CustomBean.hpp"

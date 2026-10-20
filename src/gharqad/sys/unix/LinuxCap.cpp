@@ -1,4 +1,4 @@
-#include <nekobox/sys/linux/LinuxCap.h>
+#include <nekobox/sys/unix/LinuxCap.h>
 #include <QDebug>
 #include <QProcess>
 #include <QStandardPaths>

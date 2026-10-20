@@ -28,7 +28,7 @@
 #include <nekobox/sys/windows/guihelper.h>
 #else
 #ifdef Q_OS_UNIX
-#include <nekobox/sys/linux/LinuxCap.h>
+#include <nekobox/sys/unix/LinuxCap.h>
 #endif
 #include <unistd.h>
 #include <sys/types.h>

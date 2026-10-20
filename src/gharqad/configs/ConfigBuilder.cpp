@@ -776,13 +776,17 @@ bool IsValid(std::shared_ptr<ProxyEntity> ent) {
     conf = QString2QJsonObject(ent->CustomBean()->config_simple);
   } else {
     auto out = bean->BuildCoreObjSingBox();
+    if (!out.error.isEmpty()) {
+      MW_show_log(out.error);
+      return false;
+    }
     auto outbound = out.outbound;
     // Validation must never touch the system: with useIntegratedTun/system on,
     // box.New() creates a real Wintun adapter and assigns the profile's
     // address; force netstack so CheckConfig stays side-effect free.
     if (outbound["type"] == "awg") {
       outbound["useIntegratedTun"] = false;
-    } else if (outbound["type"] == "wireguard") {
+    } else if (outbound["type"] == "wireguard" || outbound["type"] == "openvpn-client") {
       outbound["system"] = false;
     }
     auto outArr = QJsonArray{outbound};
@@ -914,7 +918,7 @@ BuildTestConfig(const QList<std::shared_ptr<ProxyEntity>> &profiles) {
     // rejects them inside "outbounds" ("unknown outbound type: awg").
     auto isEndpointType = [](const QJsonObject &ob) {
       const auto type = ob["type"].toString();
-      return type == "wireguard" || type == "tailscale" || type == "awg";
+      return type == "wireguard" || type == "tailscale" || type == "awg" || type == "openvpn-client";
     };
     for (const auto &outboundRef : outbounds) {
       auto outbound = outboundRef.toObject();
@@ -1166,6 +1170,12 @@ QString BuildChainInternal(int chainId,
 
     if (!IsIpAddress(serverAddress)) {
       status->domainListDNSDirect += serverAddress;
+    }
+    if (outbound["type"] == "openvpn-client") {
+      for (const auto &remote : outbound["servers"].toArray()) {
+        const auto host = remote.toObject()["server"].toString();
+        if (!host.isEmpty() && !IsIpAddress(host)) status->domainListDNSDirect += host;
+      }
     }
 
     if (bean->IsEndpoint()) {
@@ -1496,12 +1506,12 @@ void BuildOutbound(const std::shared_ptr<ProxyEntity> &ent,
   }
 
   const auto coreR = bean->BuildCoreObjSingBox();
-  if (coreR.outbound.isEmpty()) {
-    status->result->error = "unsupported outbound";
-    return;
-  }
   if (!coreR.error.isEmpty()) { // rejected
     status->result->error = coreR.error;
+    return;
+  }
+  if (coreR.outbound.isEmpty()) {
+    status->result->error = "unsupported outbound";
     return;
   }
   outbound = coreR.outbound;
@@ -1512,7 +1522,7 @@ void BuildOutbound(const std::shared_ptr<ProxyEntity> &ent,
   if (status->forTest) {
     if (outbound["type"] == "awg") {
       outbound["useIntegratedTun"] = false;
-    } else if (outbound["type"] == "wireguard") {
+    } else if (outbound["type"] == "wireguard" || outbound["type"] == "openvpn-client") {
       outbound["system"] = false;
     }
   }

@@ -96,6 +96,7 @@ def main():
     code += function(updater, 'bool RawUpdater::AddProxy(') + '\n'
     # Clash and WireGuard files are not inputs of these cases
     code += 'bool RawUpdater::updateClash(const QString &) { return false; }\n'
+    code += 'bool RawUpdater::updateOpenVPNFileConfig(const QString &) { return false; }\n'
     code += 'bool RawUpdater::updateWireguardFileConfig(const QString &) { return false; }\n}\n'
     code += (HERE / 'compat_checks.cpp').read_text(encoding='utf-8')
 

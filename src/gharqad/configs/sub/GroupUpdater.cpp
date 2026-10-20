@@ -5,6 +5,7 @@
 #include <nekobox/configs/ConfigBuilder.hpp>
 #include <nekobox/configs/proxy/V2RayStreamSettings.hpp>
 #include <nekobox/configs/proxy/includes.h>
+#include <nekobox/configs/proxy/OpenVPNConfig.hpp>
 #include <nekobox/configs/sub/GroupUpdater.hpp>
 #include <nekobox/configs/sub/HappDecrypt.hpp>
 #include <nekobox/dataStore/ProfileFilter.hpp>
@@ -884,6 +885,11 @@ ret_loop:
       goto ret_loop;
     }
 
+    // Keep an .ovpn as one profile, including its inline key/cert blocks.
+    if (updateOpenVPNFileConfig(str)) {
+      goto ret_loop;
+    }
+
    // Wireguard Config
     if (updateWireguardFileConfig(str)){
       goto ret_loop;
@@ -918,6 +924,10 @@ parse_json:
 
   // Json
   if (json_ok) {
+    if (json["type"] == "openvpn-client") {
+      updateSingBox(QJsonObject{{"endpoints", QJsonArray{json}}});
+      goto ret_loop;
+    }
     ent = Configs::ProfileManager::NewProxyEntity("custom");
     auto bean = ent->unlock(ent->CustomBean());
     if ((json_contains_outbounds || json_contains_endpoints) &&
@@ -1428,6 +1438,19 @@ bool RawUpdater::updateWireguardFileConfig(const QString &str) {
   auto ok = ent->unlock(ent->WireguardBean())->parseWgConfig(str);
   if (!ok)
     return false;
+  AddProxy(ent);
+  return true;
+}
+
+bool RawUpdater::updateOpenVPNFileConfig(const QString &str) {
+  if (!Configs::OpenVPN::LooksLikeConfig(str)) return false;
+  auto ent = Configs::ProfileManager::NewProxyEntity("openvpn");
+  QString error;
+  if (!ent->unlock(ent->OpenVPNBean())->ParseConfig(str, error)) {
+    MW_show_log(error);
+    // Recognized OpenVPN must not be split into independent lines after failure.
+    return true;
+  }
   AddProxy(ent);
   return true;
 }

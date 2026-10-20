@@ -129,6 +129,8 @@ namespace Configs
             bean = new Configs::WireguardBean(ent, true);
         cast(wireguard) 
             bean = new Configs::WireguardBean(ent);
+        cast(openvpn)
+            bean = new Configs::OpenVPNBean(ent);
         cast(tailscale)
             bean = new Configs::TailscaleBean(ent);
         cast(ssh) 
@@ -260,6 +262,7 @@ qDebug() << "Type Unknown" << make_strong_bean;
         cast_func(AnyTLS)
         cast_func(ShadowTLS)
         cast_func(Wireguard)
+        cast_func(OpenVPN)
         cast_func(Tailscale)
         cast_func(SSH)
         cast_func(Tor)

@@ -23,6 +23,7 @@
 #include <nekobox/ui/profile/edit_trusttunnel.h>
 #include <nekobox/ui/profile/edit_vmess.h>
 #include <nekobox/ui/profile/edit_wireguard.h>
+#include <nekobox/ui/profile/edit_openvpn.h>
 #include <nekobox/ui/profile/edit_snell.h>
 
 #include <QApplication>
@@ -268,6 +269,7 @@ DialogEditProfile::DialogEditProfile(const QString &_type, int profileOrGroupId,
     LOAD_TYPE("trusttunnel")
     LOAD_TYPE("naive")
     LOAD_TYPE("wireguard")
+    LOAD_TYPE("openvpn")
     LOAD_TYPE("awg")
     LOAD_TYPE("tailscale")
     LOAD_TYPE("ssh")
@@ -366,6 +368,10 @@ void DialogEditProfile::typeSelected(const QString &newType) {
       this->ui->port);
     innerWidget = _innerWidget;
     innerEditor = _innerWidget;
+  } else if (type == "openvpn") {
+    auto _innerWidget = new EditOpenVPN(this);
+    innerWidget = _innerWidget;
+    innerEditor = _innerWidget;
   } else if (type == "tailscale") {
     auto _innerWidget = new EditTailScale(this);
     innerWidget = _innerWidget;
@@ -431,7 +437,7 @@ void DialogEditProfile::typeSelected(const QString &newType) {
   // hide some widget
   auto showAddressPort = type != "chain" && customType != "internal" &&
                          customType != "internal-full" && type != "extracore" &&
-                         type != "tailscale" && type != "tor";
+                         type != "tailscale" && type != "tor" && type != "openvpn";
   ui->address->setVisible(showAddressPort);
   ui->address_l->setVisible(showAddressPort);
   ui->port->setVisible(showAddressPort);
@@ -612,8 +618,10 @@ bool DialogEditProfile::onEnd() {
 
   // 左边
   ent->name = ui->name->text();
-  ent->serverAddress = ui->address->text().remove(' ');
-  ent->serverPort = ui->port->text().toInt();
+  if (type != "openvpn") {
+    ent->serverAddress = ui->address->text().remove(' ');
+    ent->serverPort = ui->port->text().toInt();
+  }
   auto bean = ent->unlock(ent->bean());
 
   //

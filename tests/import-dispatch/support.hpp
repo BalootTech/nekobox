@@ -73,5 +73,6 @@ struct RawUpdater {
     void updateSIP008(const QJsonObject &) { throw std::runtime_error("unexpected SIP import"); }
     bool updateClash(const QString &) { throw std::runtime_error("unexpected YAML fallback"); }
     bool updateWireguardFileConfig(const QString &) { throw std::runtime_error("unexpected INI fallback"); }
+    bool updateOpenVPNFileConfig(const QString &) { return false; }
 };
 }

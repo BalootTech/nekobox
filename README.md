@@ -97,6 +97,7 @@ sudo apt-get install -y nekobox
 
 ## Supported protocols
  
+  * OpenVPN (TLS client, native sing-box endpoint)
 - AmneziaWG
 - AnyTLS
 - Chaining outbounds
@@ -125,6 +126,23 @@ sudo apt-get install -y nekobox
 - Wireguard
 
 ## Subscription Formats
+
+### OpenVPN profiles
+
+Choose **OpenVPN** in the profile editor and use **Import .ovpn**, or import a
+file through the main window. Relative CA, client certificate, private key,
+TLS control key and `auth-user-pass` files are bundled into the profile. You can
+also paste a configuration containing inline material, or import an
+`openvpn-client` endpoint JSON. Username and password can be entered in the
+profile editor. NekoBox share links preserve the complete profile.
+
+The core is built with `with_openvpn`. OpenVPN uses the internal network stack;
+NekoBox routing and DNS settings determine which traffic uses it. Routes and
+DNS pushed by the VPN server do not replace the application's rules. UDP/TCP,
+multiple remotes, mutual TLS, `tls-auth`, `tls-crypt`, and `tls-crypt-v2` are
+supported. TAP, static-key profiles, interactive authentication, scripts,
+plugins, nested configuration files and unsupported directives are rejected
+with an error. A separate OpenVPN executable is not required.
 
 Various formats are supported, including share links, JSON array of outbounds and v2rayN link format as well as limited support for Shadowsocks and Clash formats.
 

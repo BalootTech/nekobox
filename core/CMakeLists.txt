@@ -184,7 +184,7 @@ message(STATUS "DESTINATION IS ${DESTDIR} FOR MACHINE ${GOARCH} with platform ${
 # ----------------------------
 # Tags
 # ----------------------------
-set(TAGS "with_clash_api,with_gvisor,with_quic,with_wireguard,with_utls,with_dhcp,with_shadowtls,with_grpc,with_acme,with_awg")
+set(TAGS "with_clash_api,with_gvisor,with_quic,with_wireguard,with_utls,with_dhcp,with_shadowtls,with_grpc,with_acme,with_awg,with_openvpn")
 
 if(NOT GOOS STREQUAL "freebsd")
     set(TAGS "${TAGS},with_tailscale")

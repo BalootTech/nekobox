@@ -50,7 +50,7 @@ QWidget *mainwindow;
 MainWindow *GetMainWindow() { return (MainWindow *)mainwindow; }
 
 #ifdef Q_OS_UNIX
-#include <nekobox/sys/linux/LinuxCap.h>
+#include <nekobox/sys/unix/LinuxCap.h>
 
 QDBusPendingReply<> OrgFreedesktopPortalRequestInterface::Close() {
   QList<QVariant> argumentList;
@@ -221,6 +221,7 @@ static void loadTranslate(QString locale) {
       {"anytls", "AnyTLS"},
       {"shadowtls", "ShadowTLS"},
       {"wireguard", "Wireguard"},
+      {"openvpn", "OpenVPN"},
       {"awg", "AmneziaWG"},
       {"tailscale", "Tailscale"},
       {"ssh", "SSH"},

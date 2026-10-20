@@ -1065,6 +1065,8 @@ ProfileManager::NewProxyEntity(QString scheme, bool additional) {
       scheme = "hysteria2";
     } else if (scheme == "wg") {
       scheme = "wireguard";
+    } else if (scheme == "openvpnclient" || scheme == "ovpn") {
+      scheme = "openvpn";
     } else if (scheme == "amneziawg"
         || scheme == "amnezia"
         || scheme == "vpn"){

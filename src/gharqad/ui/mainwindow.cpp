@@ -14,6 +14,7 @@
 #include <3rdparty/qv2ray/wrapper.hpp>
 #include <QtConcurrent>
 #include <nekobox/configs/ConfigBuilder.hpp>
+#include <nekobox/configs/proxy/OpenVPNConfig.hpp>
 #include <nekobox/configs/sub/GroupUpdater.hpp>
 #include <nekobox/configs/sub/HappDecrypt.hpp>
 #include <nekobox/dataStore/Const.hpp>
@@ -73,7 +74,7 @@
 #include <QDBusInterface>
 #include <QDBusReply>
 #include <QUuid>
-#include <nekobox/sys/linux/LinuxCap.h>
+#include <nekobox/sys/unix/LinuxCap.h>
 #include <unistd.h> // For access()
 #endif
 #include <unistd.h>
@@ -493,6 +494,14 @@ void MainWindow::on_menu_add_from_file() {
   if (file.open(QIODevice::ReadOnly)) {
     auto contents = file.readAll();
     file.close();
+    if (Configs::OpenVPN::LooksLikeConfig(QString::fromUtf8(contents))) {
+      QString bundled, error;
+      if (!Configs::OpenVPN::LoadFile(path, bundled, error)) {
+        QMessageBox::warning(this, tr("OpenVPN"), error);
+        return;
+      }
+      contents = bundled.toUtf8();
+    }
     Subscription::groupUpdater->AsyncUpdate(this->post_update_job, contents,
                                             &chooseUpdateGroup);
     SAVE_LATEST(path);
@@ -3541,6 +3550,14 @@ void MainWindow::on_menu_update_profile_file_triggered() {
   if (file.open(QIODevice::ReadOnly)) {
     auto contents = file.readAll();
     file.close();
+    if (Configs::OpenVPN::LooksLikeConfig(QString::fromUtf8(contents))) {
+      QString bundled, error;
+      if (!Configs::OpenVPN::LoadFile(path, bundled, error)) {
+        QMessageBox::warning(this, tr("OpenVPN"), error);
+        return;
+      }
+      contents = bundled.toUtf8();
+    }
     SAVE_LATEST(path);
     update_selected_profiles(contents);
   }

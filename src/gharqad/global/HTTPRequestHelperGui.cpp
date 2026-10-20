@@ -112,7 +112,7 @@ QString Configs_network::NetworkRequestHelperGui::DownloadAsset(const QString &u
             // WRITE CALLBACK
             // =========================
             session.SetWriteCallback(
-                write_callback
+                cpr::WriteCallback{write_callback}
             );
 
             // =========================

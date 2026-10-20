@@ -60,5 +60,6 @@ struct RawUpdater {
     void updateSIP008(const QJsonObject &) { ++sipCalls; }
     bool updateClash(const QString &) { return false; }
     bool updateWireguardFileConfig(const QString &) { return false; }
+    bool updateOpenVPNFileConfig(const QString &) { return false; }
 };
 }

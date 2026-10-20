@@ -1,0 +1,35 @@
+name: OpenVPN validation
+on:
+  push:
+    branches: [codex/openvpn]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  parser-and-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: core/server/go.mod
+          cache-dependency-path: core/server/go.sum
+      - name: Install native test dependencies
+        run: sudo apt-get update && sudo apt-get install -y qt6-base-dev libboost-dev cmake ninja-build g++ openssl
+      - name: Compile and run real Qt parser tests
+        run: |
+          cmake -S tests/openvpn -B build-openvpn -G Ninja
+          cmake --build build-openvpn
+          ctest --test-dir build-openvpn --output-on-failure
+      - name: Preserve existing imports
+        run: |
+          python3 tests/json-import/test_json_import.py --qt
+          python3 tests/json-splitter/test_json_splitter.py
+          python3 tests/import-dispatch/test_import_dispatch.py
+          python3 tests/detour-chain/test_import_compat.py
+      - name: Validate generated endpoints against the pinned core
+        run: |
+          openssl req -x509 -newkey rsa:2048 -nodes -keyout build-openvpn/key.pem -out build-openvpn/ca.pem -days 1 -subj /CN=OpenVPN-test
+          build-openvpn/openvpn_config_tests --emit-core build-openvpn/ca.pem > build-openvpn/core-configs.jsonl
+          cd core/server
+          go run -tags with_openvpn,with_gvisor ../../tests/openvpn/core_check.go < ../../build-openvpn/core-configs.jsonl

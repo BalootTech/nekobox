@@ -21,6 +21,7 @@ namespace Subscription {
                                  const QString &name);
 
         bool updateWireguardFileConfig(const QString &str);
+        bool updateOpenVPNFileConfig(const QString &str);
 
         int gid_add_to = -1;
 
