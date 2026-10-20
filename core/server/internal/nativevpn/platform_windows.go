@@ -33,6 +33,9 @@ import (
 
 var nativeConnections = connectionPool{connect: connectWindows}
 
+// IP_UNICAST_IF from ws2ipdef.h is not exported by x/sys/windows.
+const ipUnicastIF = 31
+
 var (
 	rasDLL       = windows.NewLazySystemDLL("rasapi32.dll")
 	rasDial      = rasDLL.NewProc("RasDialW")
@@ -415,7 +418,7 @@ func (c *windowsConnection) check() error {
 func (c *windowsConnection) control(_ string, _ string, raw syscall.RawConn) error {
 	var err error
 	if outer := raw.Control(func(fd uintptr) {
-		err = windows.SetsockoptInt(windows.Handle(fd), windows.IPPROTO_IP, windows.IP_UNICAST_IF, int(bits.ReverseBytes32(uint32(c.index))))
+		err = windows.SetsockoptInt(windows.Handle(fd), windows.IPPROTO_IP, ipUnicastIF, int(bits.ReverseBytes32(uint32(c.index))))
 	}); outer != nil {
 		return outer
 	}
