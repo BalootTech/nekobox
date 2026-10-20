@@ -341,6 +341,7 @@ void MainWindow::url_test_current() {
         req.test_current = (true);
         if (useProxyTag) req.outbound_tags.push_back("proxy");
         req.url = (Configs::dataStore->test_latency_url.toStdString());
+        req.test_timeout_ms = Configs::dataStore->url_test_timeout_ms;
 
         bool rpcOK;
         auto result = defaultClient->Test(&rpcOK, req);
